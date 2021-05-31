@@ -1,17 +1,36 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+require("dotenv").config();
+// routers
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+// knex
 const options = require('./knexfile.js');
 const knex = require('knex')(options);
+// cors 
+const helmet = require('helmet');
+const cors = require('cors');
+// swagger docs
+const swaggerUI = require('swagger-ui-express');
+const swaggerDocument = require('./docs/swagger.json');
 
 var app = express();
 
+app.use(logger('common'));
+
+app.use(helmet());
+app.use(cors());
+logger.token('req', (req, res) => JSON.stringify(req.headers))
+logger.token('res', (req, res) => {
+  const headers = {}
+  res.getHeaderNames().map(h => headers[h] = res.getHeader(h))
+  return JSON.stringify(headers)
+})
+
+// db initialisation
 app.use((req, res, next) => {
   req.db = knex
   next()
@@ -32,8 +51,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocument))
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

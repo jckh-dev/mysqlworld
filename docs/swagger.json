@@ -1,0 +1,226 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "World City API",
+        "description": "This is a simple Express API based on the World Cities Database. It supports basic city and province listings, along with filtering based on Country Code",
+        "version": "1.0.0",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "email": "josh.hill@qut.edu.au"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3001"
+        }
+    ],
+    "components": [],
+    "basePath": "/api",
+    "tags": [
+        {
+            "name": "information",
+            "description": "General API Description"
+        },
+        {
+            "name": "query",
+            "description": "API queries based on city and optional country code"
+        },
+        {
+            "name": "update",
+            "description": "Update a value associated with a city"
+        }
+    ],
+    "paths": {
+        "/": {
+            "get": {
+                "tags": [
+                    "information"
+                ],
+                "summary": "Simple information page",
+                "description": "Very basic API promising more information",
+                "operationId": "apiHome",
+                "produces": [
+                    "text/html"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/api/city": {
+            "get": {
+                "tags": [
+                    "query"
+                ],
+                "summary": "List cities and provinces",
+                "description": "Full listing of cities and their provinces for the database",
+                "operationId": "listCitiesAndDistricts",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "Error": {
+                                    "type": "string",
+                                    "enum": [
+                                        "true",
+                                        "false"
+                                    ]
+                                },
+                                "Message": {
+                                    "type": "string",
+                                    "enum": [
+                                        "Success",
+                                        "Failure"
+                                    ]
+                                },
+                                "City": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "district": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/city/{CountryCode}": {
+            "get": {
+                "tags": [
+                    "query"
+                ],
+                "summary": "Find list of cities within a particular country",
+                "description": "Use a country's three letter country code to produce a list of cities within it's borders",
+                "operationId": "listCitiesInCountryCode",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "CountryCode",
+                        "description": "A country's three letter code",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "Error": {
+                                    "type": "string",
+                                    "enum": [
+                                        "true",
+                                        "false"
+                                    ]
+                                },
+                                "Message": {
+                                    "type": "string",
+                                    "enum": [
+                                        "Success",
+                                        "Failure"
+                                    ]
+                                },
+                                "City": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "district": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid country code"
+                    }
+                }
+            }
+        },
+        "/api/update": {
+            "post": {
+                "tags": [
+                    "update"
+                ],
+                "summary": "update a cities population count",
+                "description": "Use both the city name and correct country code to update it's population figure.",
+                "operationId": "updateCity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "popUpdate",
+                        "description": "update a city population count",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "CountryCode": {
+                                    "type": "string",
+                                    "default": "AUS"
+                                },
+                                "City": {
+                                    "type": "string",
+                                    "default": "Brisbane"
+                                },
+                                "Pop": {
+                                    "type": "integer",
+                                    "default": 10000000
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Success! City population has been updated."
+                    },
+                    "500": {
+                        "description": "There was an error, please check your details and"
+                    },
+                    "400": {
+                        "description": "Bad request to the server, check the details you submitted"
+                    }
+                }
+            }
+        }
+    }
+}
