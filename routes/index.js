@@ -30,10 +30,37 @@ router.get("/api/city/:CountryCode", function (req, res, next) {
     })
 });
 
-router.post('/api/update', (req, res) => {
+const authorize = (req, res, next) => {
+  const authorization = req.headers.authorization
+  let token = null
+
+  if (authorization && authorization.split(" ").length === 2) {
+    token = authorization.split(" ")[1]
+    console.log("Token: ", token)
+  } else {
+    res.status(401).json({ error: true, message: err + " : Unauthorized" })
+    return
+  }
+
+  // verify JWT and check exp date
+  try {
+    const decoded = jwt.verify(token, secretKey)
+
+    if (decoded.exp < Date.now()) {
+      res.status(401).json({ error: true, message: "token expired" })
+      return
+    }
+
+    // permit user to advance
+    next()
+  } catch (e) {
+    res.status(401).json({ error: true, message: err + " : Unauthorized" })
+  }
+}
+
+router.post('/api/update', authorize, function (req, res) {
   if (!req.body.City || !req.body.CountryCode || !req.body.Pop) {
     res.status(400).json({ message: `Error updating population` });
-    console.log(`Error on request body:`, SON.stringify(req.body));
   } else {
     const filter = {
       "Name": req.body.City,
@@ -42,14 +69,15 @@ router.post('/api/update', (req, res) => {
     const pop = {
       "Population": req.body.Pop
     }
-    req.db('city').where(filter).update(pop)
+    req.db
+      .from('city')
+      .where(filter)
+      .update(pop)
       .then(_ => {
-        res.status(201).json({ message: `Successful update ${req.body.City}` });
-        console.log(`successful population update:`,
-          JSON.stringify(filter));
+        res.status(201).json({ message: "Successful update " + req.body.City });
       })
-      .catch(error => {
-
+      .catch((err) => {
+        console.log(err)
         res.status(500).json({ message: 'Database error - not updated' });
       })
   }
